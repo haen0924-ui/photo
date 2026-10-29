@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모두 이야기 캠프 · 포토부스</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Black+Han+Sans&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --coral: #E8553A;
+  --teal: #2A9D8F;
+  --gold: #E9C46A;
+  --navy: #1B2B4B;
+  --cream: #FFF8F0;
+  --warm-white: #FFFDF9;
+  --shadow: rgba(27,43,75,0.13);
+  --border: rgba(27,43,75,0.1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: 'Gowun Batang', serif; background: #f5f4f0; }
+
+/* ══════════════════════════════
+   전체 레이아웃: 세로 3단
+   header / main / (모달)
+══════════════════════════════ */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── 상단 헤더 ── */
+.top-header {
+  flex-shrink: 0;
+  height: 72px;
+  background: #fff;
+  border-bottom: 1px solid rgba(27,43,75,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  position: relative;
+  overflow: hidden;
+}
+.top-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 30% 100% at 50% 50%, rgba(232,85,58,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+.header-title {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 2rem;
+  color: var(--navy);
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+.header-title-sub {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(27,43,75,0.35);
+  letter-spacing: 0.12em;
+}
+
+.header-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1;
+}
+.header-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--coral);
+  opacity: 0.7;
+}
+.header-meta {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.08em;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── 메인 영역 ── */
+.main-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ── 카메라 패널 (왼쪽) ── */
+.camera-panel {
+  flex: 0 0 calc(100% - 440px);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 20px 16px 24px;
+  gap: 12px;
+  background: #f5f4f0;
+}
+
+.camera-wrap {
+  /* 4:3 비율 유지, 패널 높이에 맞게 축소 */
+  width: min(100%, calc((100vh - 72px - 120px) * 4 / 3));
+  aspect-ratio: 4 / 3;
+  flex-shrink: 0;
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(27,43,75,0.1), 0 12px 40px rgba(27,43,75,0.15);
+  background: #e8e6e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.camera-wrap::before {
+  /* 코너 장식 */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  border: 2px solid rgba(232,85,58,0.3);
+  pointer-events: none;
+  z-index: 5;
+}
+
+#videoEl {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+  display: none;
+  border-radius: 16px;
+}
+.camera-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  color: rgba(27,43,75,0.25);
+}
+.camera-placeholder p { font-size: 0.9rem; letter-spacing: 0.06em; }
+
+/* 코너 브라켓 장식 */
+.bracket {
+  position: absolute;
+  width: 28px; height: 28px;
+  pointer-events: none;
+  z-index: 6;
+}
+.bracket::before, .bracket::after { content: ''; position: absolute; background: var(--coral); }
+.bracket::before { width: 2px; height: 100%; }
+.bracket::after  { width: 100%; height: 2px; }
+.bracket.tl { top: 12px; left: 12px; }
+.bracket.tl::before { top: 0; left: 0; }
+.bracket.tl::after  { top: 0; left: 0; }
+.bracket.tr { top: 12px; right: 12px; transform: scaleX(-1); }
+.bracket.tr::before { top: 0; left: 0; }
+.bracket.tr::after  { top: 0; left: 0; }
+.bracket.bl { bottom: 12px; left: 12px; transform: scaleY(-1); }
+.bracket.bl::before { top: 0; left: 0; }
+.bracket.bl::after  { top: 0; left: 0; }
+.bracket.br { bottom: 12px; right: 12px; transform: scale(-1); }
+.bracket.br::before { top: 0; left: 0; }
+.bracket.br::after  { top: 0; left: 0; }
+
+/* 카운트다운 */
+.countdown-overlay {
+  position: absolute; inset: 0;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.5); z-index: 10;
+}
+.countdown-overlay.active { display: flex; }
+.countdown-sign {
+  position: absolute; top: 6%; right: 6%;
+  width: 28%; max-width: 180px;
+  object-fit: contain; mix-blend-mode: screen;
+  animation: countPop 1s ease-out forwards;
+  pointer-events: none; z-index: 2;
+}
+@keyframes countPop {
+  0%  { transform: scale(1.4); opacity: 0; }
+  30% { transform: scale(1);   opacity: 1; }
+  80% { transform: scale(1);   opacity: 1; }
+  100%{ transform: scale(0.85);opacity: 0; }
+}
+
+.countdown-number {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 9rem;
+  color: #fff;
+  text-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  animation: countPop 1s ease-out forwards;
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1;
+}
+
+/* 촬영 도트 */
+.shot-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.shot-label {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 0.72rem;
+  color: rgba(27,43,75,0.35);
+  letter-spacing: 0.1em;
+}
+.shot-indicator { display: flex; gap: 8px; }
+.shot-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(27,43,75,0.2);
+  background: transparent;
+  transition: background 0.3s, transform 0.3s, border-color 0.3s;
+}
+.shot-dot.done { background: var(--coral); border-color: var(--coral); transform: scale(1.2); }
+.shot-dot.active {
+  background: var(--gold); border-color: var(--gold);
+  animation: pulse 0.6s ease-in-out infinite alternate;
+}
+@keyframes pulse { to { transform: scale(1.4); } }
+
+/* 상태 메시지 */
+.status-msg {
+  font-size: 0.82rem;
+  color: rgba(27,43,75,0.45);
+  text-align: center;
+  min-height: 1.2em;
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
+/* 버튼 행 */
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.btn {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  padding: 11px 26px;
+  border-radius: 50px;
+  border: none; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+.btn:active:not(:disabled) { transform: translateY(0); }
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-primary { background: var(--navy); color: #fff; border: none; }
+.btn-coral   { background: var(--coral); color: #fff; }
+.btn-teal    { background: var(--teal); color: #fff; }
+.btn-gold    { background: var(--gold); color: var(--navy); }
+.btn-qr      { background: #6B4EFF; color: #fff; }
+.btn-result  { background: linear-gradient(135deg,var(--teal),#48c9b6); color:#fff; }
+
+/* ── 옵션 패널 (오른쪽) ── */
+.options-panel {
+  width: 440px;
+  flex-shrink: 0;
+  background: #1a1a2e;
+  border-left: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  padding: 28px 24px;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+.opt-section-title {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* 컷 수 / 레이아웃 버튼 */
+.chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 10px 20px;
+  border-radius: 24px;
+  border: 1.5px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.chip:hover { border-color: rgba(255,255,255,0.5); color: #fff; background: rgba(255,255,255,0.12); }
+.chip.selected {
+  background: var(--coral);
+  border-color: var(--coral);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(232,85,58,0.35);
+}
+
+/* 레이아웃 아이콘 칩 */
+.layout-chip {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+  padding: 12px 10px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.65);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex: 1; min-width: 70px;
+}
+.layout-chip:hover { border-color: rgba(255,255,255,0.4); color: #fff; background: rgba(255,255,255,0.1); }
+.layout-chip.selected {
+  background: rgba(232,85,58,0.25);
+  border-color: var(--coral);
+  color: #fff;
+}
+.layout-chip.disabled { opacity: 0.25; pointer-events: none; }
+.layout-icon {
+  display: grid;
+  gap: 3px;
+  width: 36px; height: 36px;
+}
+.layout-icon .b {
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.8;
+}
+.icon-v { grid-template-rows: repeat(4,1fr); grid-template-columns: 1fr; }
+.icon-h { grid-template-columns: repeat(4,1fr); grid-template-rows: 1fr; }
+.icon-g { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+
+.layout-chip-label { font-family: 'Noto Sans KR', sans-serif; font-weight: 700; font-size: 0.82rem; }
+
+/* 색상 스와치 */
+.swatch-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.swatch {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.swatch:hover { transform: scale(1.12); }
+.swatch.selected {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.25);
+  transform: scale(1.1);
+}
+
+/* 패턴 버튼 */
+.pattern-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pattern-chip {
+  width: 52px; height: 52px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.12);
+  cursor: pointer;
+  transition: all 0.15s;
+  overflow: hidden;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+}
+.pattern-chip:hover { border-color: rgba(255,255,255,0.4); transform: scale(1.08); }
+.pattern-chip.selected { border-color: var(--coral); border-width: 2px; box-shadow: 0 0 0 2px rgba(232,85,58,0.35); }
+.pattern-none-label { font-size: 0.72rem; color: rgba(255,255,255,0.6); font-family: 'Noto Sans KR', sans-serif; font-weight: 700; }
+
+/* 구분선 */
+.opt-divider { height: 1px; background: rgba(255,255,255,0.12); margin: 0 -24px; }
+
+/* 전체화면 버튼 */
+#btnFullscreen {
+  background: #f5f4f0;
+  color: rgba(27,43,75,0.5);
+  border: 1px solid rgba(27,43,75,0.12);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 5px;
+  white-space: nowrap;
+}
+#btnFullscreen:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+/* 플래시 */
+.flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 200; transition: opacity 0.08s; }
+.flash.on { opacity: 1; }
+
+/* ── 결과 화면 ── */
+#resultScreen {
+  flex: 1; min-height: 0;
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px; padding: 20px;
+  background: #f5f4f0;
+  overflow-y: auto;
+}
+#resultScreen .status-msg { color: rgba(27,43,75,0.45); }
+
+/* 편집 영역 */
+.edit-container {
+  position: relative;
+  display: inline-block;
+}
+#collageCanvas {
+  width: auto; max-width: 100%; max-height: calc(100vh - 200px);
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px rgba(27,43,75,0.08), 0 16px 48px rgba(27,43,75,0.15);
+  display: block;
+}
+#editCanvas {
+  position: absolute;
+  top: 0; left: 0;
+  border-radius: 14px;
+  cursor: crosshair;
+  display: none;
+  width: auto; max-width: 100%; max-height: calc(100vh - 200px);
+}
+
+/* 편집 도구바 */
+.edit-toolbar {
+  display: none;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 0 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+.edit-toolbar.active { display: flex; }
+
+.sticker-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.sticker-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(27,43,75,0.15);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sticker-btn:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(27,43,75,0.1); }
+.sticker-btn.active { border-color: var(--coral); background: rgba(232,85,58,0.1); }
+
+.text-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+#textInput {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid rgba(27,43,75,0.15);
+  border-radius: 8px;
+  font-family: 'Gowun Batang', serif;
+  font-size: 0.95rem;
+}
+#textSizeInput {
+  width: 50px;
+  padding: 8px;
+  border: 1px solid rgba(27,43,75,0.15);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.edit-button-group {
+  display: flex;
+  gap: 8px;
+}
+.edit-button-group button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.btn-done {
+  background: var(--coral);
+  color: #fff;
+}
+.btn-done:hover { background: #d64120; transform: translateY(-2px); }
+.btn-cancel {
+  background: rgba(27,43,75,0.05);
+  color: rgba(27,43,75,0.7);
+  border: 1px solid rgba(27,43,75,0.1);
+}
+.btn-cancel:hover { background: rgba(27,43,75,0.1); }
+
+/* 결과 버튼 */
+.result-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.result-buttons button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Gowun Batang', serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+#btnEdit {
+  background: var(--teal);
+  color: #fff;
+}
+#btnEdit:hover { background: #1e8a7f; transform: translateY(-2px); }
+
+#btnQr, #btnSave, #btnReset {
+  background: rgba(27,43,75,0.05);
+  color: rgba(27,43,75,0.7);
+  border: 1px solid rgba(27,43,75,0.12);
+}
+#btnQr:hover, #btnSave:hover, #btnReset:hover { background: rgba(27,43,75,0.08); transform: translateY(-2px); }
+
+.btn-teal {
+  background: var(--teal) !important;
+  color: #fff !important;
+}
+.btn-teal:hover {
+  background: #1e8a7f !important;
+  transform: translateY(-2px);
+}
+
+/* ── 모달 ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(27,43,75,0.4); backdrop-filter: blur(6px);
+  z-index: 100; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: #fff;
+  border: 1px solid rgba(27,43,75,0.1);
+  border-radius: 20px; padding: 36px 32px;
+  width: 90%; max-width: 400px;
+  box-shadow: 0 24px 80px rgba(27,43,75,0.2);
+  display: flex; flex-direction: column; gap: 16px;
+  animation: modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalIn { from{transform:scale(0.85) translateY(20px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+.modal-title { font-family:'Black Han Sans',sans-serif; font-size:1.3rem; color:var(--navy); text-align:center; }
+.modal-desc  { font-size:0.85rem; color:rgba(27,43,75,0.45); text-align:center; line-height:1.7; }
+.text-input  { width:100%; padding:12px 16px; border-radius:10px; border:1.5px solid rgba(27,43,75,0.15); font-family:'Gowun Batang',serif; font-size:1rem; outline:none; transition:border-color 0.2s; background:#f5f4f0; color:var(--navy); }
+.text-input::placeholder { color: rgba(27,43,75,0.25); }
+.text-input:focus { border-color: var(--teal); }
+.modal-btn-row { display:flex; gap:10px; }
+.modal-btn-row .btn { flex:1; }
+
+/* QR 박스 */
+.qr-box {
+  background: #fff;
+  border: 1px solid rgba(27,43,75,0.1);
+  border-radius: 20px; padding: 32px;
+  width: 90%; max-width: 340px;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  animation: modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.qr-title { font-family:'Black Han Sans',sans-serif; font-size:1.3rem; color:var(--navy); }
+.qr-desc  { font-size:0.84rem; color:rgba(27,43,75,0.45); text-align:center; line-height:1.7; }
+#qrCanvas { border-radius:10px; border:3px solid rgba(27,43,75,0.15); }
+.qr-hint  { font-size:0.78rem; color:rgba(27,43,75,0.3); text-align:center; line-height:1.6; }
+
+/* 반응형 */
+@media (max-width: 900px) {
+  .options-panel { width: 100%; flex-direction: row; flex-wrap: wrap; height: auto; padding: 12px; }
+  .main-area { flex-direction: column; }
+  .top-header { padding: 0 16px; font-size: 1.1rem; }
+  .header-center { display: none; }
+  
+  /* 모바일 버튼 크기 확대 */
+  .btn { padding: 14px 20px; font-size: 1.1rem; }
+  .btn-row { gap: 8px; }
+  
+  /* 스티커 버튼 더 크게 */
+  .sticker-btn { width: 50px; height: 50px; font-size: 1.8rem; }
+  .sticker-buttons { gap: 8px; }
+  
+  /* 입력 필드 크기 */
+  #textInput { font-size: 1rem; padding: 12px; }
+  #textSizeInput { font-size: 1rem; padding: 12px; }
+  #textFontSelect { font-size: 1rem; padding: 12px; }
+  
+  /* 편집 도구바 개선 */
+  .edit-toolbar { padding: 12px; }
+  .text-input-group { width: 100%; }
+  .edit-button-group { width: 100%; gap: 8px; }
+  .btn-done, .btn-cancel { padding: 12px 16px; font-size: 1rem; flex: 1; }
+  
+  /* 터치 타겟 크기 최소 48px */
+  input[type="text"], input[type="number"], select { min-height: 48px; }
+  button { min-height: 48px; }
+  
+  /* 캔버스 터치 반응 개선 */
+  #editCanvas { touch-action: none; }
+  
+  /* 사용 방법 안내 모바일 대응 */
+  .usage-grid { grid-template-columns: 1fr !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="flash" id="flashEl"></div>
+
+<div class="app-shell">
+
+  <!-- ── 상단 헤더 ── -->
+  <header class="top-header">
+    <div class="header-left">
+      <span class="header-title">모두 이야기 캠프</span>
+      <span class="header-title-sub">PHOTO BOOTH · 2026. 10. 31. 모두예술극장</span>
+    </div>
+    <div class="header-center"></div>
+    <div class="header-right">
+      <button id="btnFullscreen" onclick="toggleFullscreen()">
+        <span id="fsIcon">⛶</span><span id="fsText">전체화면</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── 메인 ── -->
+  <div class="main-area" id="mainArea">
+
+    <!-- 카메라 패널 -->
+    <div class="camera-panel" id="cameraPanel">
+      <div class="camera-wrap">
+        <div class="bracket tl"></div>
+        <div class="bracket tr"></div>
+        <div class="bracket bl"></div>
+        <div class="bracket br"></div>
+        <div class="camera-placeholder" id="placeholderEl">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <p>촬영 준비 버튼을 눌러주세요</p>
+        </div>
+        <video id="videoEl" autoplay playsinline muted></video>
+        <div class="countdown-overlay" id="countdownOverlay">
+          <img class="countdown-sign" id="countdownSign" src="" alt="">
+          <span id="countdownNum" class="countdown-number"></span>
+        </div>
+      </div>
+
+      <div class="shot-bar">
+        <span class="shot-label">SHOTS</span>
+        <div class="shot-indicator" id="shotIndicator"></div>
+      </div>
+      <div class="status-msg" id="statusMsg">촬영 준비 버튼을 눌러 카메라를 시작하세요.</div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnReady"  onclick="startCamera()">📷 촬영 준비</button>
+        <button class="btn btn-coral"   id="btnShoot"  onclick="startShooting()" disabled>🎬 촬영 시작</button>
+        <button class="btn btn-result"  id="btnResult" onclick="showResult()" style="display:none">🖼️ 결과 보기</button>
+      </div>
+    </div>
+
+    <!-- 옵션 패널 -->
+    <div class="options-panel" id="optionsPanel">
+
+      <!-- 컷 수 -->
+      <div>
+        <div class="opt-section-title">컷 수</div>
+        <div class="chip-row" id="shotCountOpts">
+          <button class="chip" data-shots="1" onclick="setShotCount(1)">1컷</button>
+          <button class="chip" data-shots="2" onclick="setShotCount(2)">2컷</button>
+          <button class="chip" data-shots="3" onclick="setShotCount(3)">3컷</button>
+          <button class="chip selected" data-shots="4" onclick="setShotCount(4)">4컷</button>
+        </div>
+      </div>
+
+      <div class="opt-divider"></div>
+
+      <!-- 레이아웃 -->
+      <div>
+        <div class="opt-section-title">레이아웃</div>
+        <div class="chip-row" id="layoutOpts" style="gap:6px">
+          <div class="layout-chip selected" data-layout="vertical" onclick="setLayout('vertical')">
+            <div class="layout-icon icon-v">
+              <div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div>
+            </div>
+            <span class="layout-chip-label">세로</span>
+          </div>
+          <div class="layout-chip" data-layout="horizontal" onclick="setLayout('horizontal')">
+            <div class="layout-icon icon-h">
+              <div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div>
+            </div>
+            <span class="layout-chip-label">가로</span>
+          </div>
+          <div class="layout-chip" data-layout="grid" onclick="setLayout('grid')">
+            <div class="layout-icon icon-g">
+              <div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div>
+            </div>
+            <span class="layout-chip-label">2×2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="opt-divider"></div>
+
+      <!-- 배경색 -->
+      <div>
+        <div class="opt-section-title">배경색</div>
+        <div class="swatch-row" id="bgColorOpts">
+          <div class="swatch selected" data-color="orange" title="오렌지" style="background:linear-gradient(135deg,#F4A04A,#E8693A)" onclick="setBgColor('orange')"></div>
+          <div class="swatch" data-color="navy" title="딥네이비" style="background:linear-gradient(135deg,#1B2B4B,#2d4a7a)" onclick="setBgColor('navy')"></div>
+          <div class="swatch" data-color="teal" title="민트틸" style="background:linear-gradient(135deg,#2A9D8F,#48c9b6)" onclick="setBgColor('teal')"></div>
+          <div class="swatch" data-color="rose" title="로즈핑크" style="background:linear-gradient(135deg,#e91e8c,#f4659c)" onclick="setBgColor('rose')"></div>
+          <div class="swatch" data-color="lavender" title="라벤더" style="background:linear-gradient(135deg,#7b68ee,#a29bfe)" onclick="setBgColor('lavender')"></div>
+          <div class="swatch" data-color="forest" title="포레스트" style="background:linear-gradient(135deg,#2d6a4f,#52b788)" onclick="setBgColor('forest')"></div>
+        </div>
+      </div>
+
+      <div class="opt-divider"></div>
+
+      <!-- 배경 무늬 -->
+      <div>
+        <div class="opt-section-title">배경 무늬</div>
+        <div class="pattern-row" id="bgPatternOpts">
+          <div class="pattern-chip selected" data-pattern="none" onclick="setBgPattern('none')" style="background:#2a2a3e;">
+            <span class="pattern-none-label">없음</span>
+          </div>
+          <div class="pattern-chip" data-pattern="dots" onclick="setBgPattern('dots')" title="물방울"
+            style="background:radial-gradient(circle,#fff 22%,transparent 22%) 0 0/8px 8px, #2a2a3e;">
+          </div>
+          <div class="pattern-chip" data-pattern="lines" onclick="setBgPattern('lines')" title="사선"
+            style="background:repeating-linear-gradient(45deg,#fff 0,#fff 1.5px,transparent 1.5px,transparent 7px), #2a2a3e;">
+          </div>
+          <div class="pattern-chip" data-pattern="grid" onclick="setBgPattern('grid')" title="격자"
+            style="background:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px); background-size:7px 7px; background-color:#2a2a3e;">
+          </div>
+          <div class="pattern-chip" data-pattern="stars" onclick="setBgPattern('stars')" title="별" style="background:#2a2a3e; color:#fff;">✦</div>
+          <div class="pattern-chip" data-pattern="hearts" onclick="setBgPattern('hearts')" title="하트" style="background:#2a2a3e; color:#ff6b9d;">♥</div>
+        </div>
+      </div>
+
+    </div><!-- /options-panel -->
+
+    <!-- 결과 화면 -->
+    <div id="resultScreen">
+      <!-- 사용 방법 안내 -->
+      <div class="usage-guide" style="background:linear-gradient(135deg,rgba(42,157,143,0.1),rgba(232,85,58,0.1)); border:2px solid rgba(27,43,75,0.15); border-radius:12px; padding:16px; margin-bottom:16px; max-width:600px;">
+        <div style="font-size:1.1rem; font-weight:700; color:rgba(27,43,75,0.9); margin-bottom:10px;">📸 사용 방법</div>
+        <div class="usage-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:0.95rem;">
+          <div style="display:flex; gap:8px; align-items:flex-start;">
+            <span style="font-weight:700; color:rgba(42,157,143,0.9); font-size:1.2rem;">1️⃣</span>
+            <div>
+              <div style="font-weight:600; color:rgba(27,43,75,0.8);">✏️ 꾸미기</div>
+              <div style="color:rgba(27,43,75,0.6);">스티커와 글씨를 추가하세요</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:flex-start;">
+            <span style="font-weight:700; color:rgba(42,157,143,0.9); font-size:1.2rem;">2️⃣</span>
+            <div>
+              <div style="font-weight:600; color:rgba(27,43,75,0.8);">✏️ 꾸미기 완료</div>
+              <div style="color:rgba(27,43,75,0.6);">완료 후 QR코드 활성화</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:flex-start;">
+            <span style="font-weight:700; color:rgba(232,85,58,0.9); font-size:1.2rem;">3️⃣</span>
+            <div>
+              <div style="font-weight:600; color:rgba(27,43,75,0.8);">📱 QR코드</div>
+              <div style="color:rgba(27,43,75,0.6);">사진 다운로드 또는 공유</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:flex-start;">
+            <span style="font-weight:700; color:rgba(232,85,58,0.9); font-size:1.2rem;">4️⃣</span>
+            <div>
+              <div style="font-weight:600; color:rgba(27,43,75,0.8);">💾 저장</div>
+              <div style="color:rgba(27,43,75,0.6);">또는 다시 촬영</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 편집 영역 -->
+      <div class="edit-container">
+        <canvas id="collageCanvas"></canvas>
+        <canvas id="editCanvas"></canvas>
+      </div>
+      <div class="status-msg" id="resultStatusMsg"></div>
+
+      <!-- 편집 도구 -->
+      <div id="editToolbar" class="edit-toolbar">
+        <!-- 전체 안내 -->
+        <div style="width:100%; background:linear-gradient(135deg,rgba(27,43,75,0.05),rgba(232,85,58,0.05)); border:1px solid rgba(27,43,75,0.1); border-radius:10px; padding:12px 16px; margin-bottom:8px;">
+          <div style="font-size:0.9rem; color:rgba(27,43,75,0.7); font-weight:600; margin-bottom:6px;">🎨 사진을 꾸며보세요!</div>
+          <div style="font-size:0.8rem; color:rgba(27,43,75,0.6); line-height:1.4;">
+            스티커와 글씨를 추가하고, 마우스로 위치와 크기를 자유롭게 조절할 수 있습니다.
+            <br/>
+            완성되면 <strong style="color:rgba(232,85,58,0.8);">"완료" 버튼을 클릭</strong>하고 저장하세요!
+          </div>
+        </div>
+        
+        <div style="width:100%; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+          <!-- 스티커 -->
+          <div style="display:flex; flex-direction:column; gap:6px; align-items:center;">
+            <span style="font-size:0.75rem; color:rgba(27,43,75,0.5); font-weight:600;">스티커</span>
+            <div class="sticker-buttons">
+              <button class="sticker-btn" data-sticker="😊">😊</button>
+              <button class="sticker-btn" data-sticker="❤️">❤️</button>
+              <button class="sticker-btn" data-sticker="⭐">⭐</button>
+              <button class="sticker-btn" data-sticker="✨">✨</button>
+              <button class="sticker-btn" data-sticker="🎉">🎉</button>
+              <button class="sticker-btn" data-sticker="👏">👏</button>
+              <button class="sticker-btn" data-sticker="🌸">🌸</button>
+              <button class="sticker-btn" data-sticker="🎨">🎨</button>
+              <button class="sticker-btn" data-sticker="🌈">🌈</button>
+              <button class="sticker-btn" data-sticker="💫">💫</button>
+              <button class="sticker-btn" data-sticker="🎭">🎭</button>
+              <button class="sticker-btn" data-sticker="🎪">🎪</button>
+              <button class="sticker-btn" data-sticker="🌺">🌺</button>
+              <button class="sticker-btn" data-sticker="🦋">🦋</button>
+              <button class="sticker-btn" data-sticker="🌻">🌻</button>
+              <button class="sticker-btn" data-sticker="🎀">🎀</button>
+              <button class="sticker-btn" data-sticker="🎁">🎁</button>
+              <button class="sticker-btn" data-sticker="💐">💐</button>
+              <button class="sticker-btn" data-sticker="🎊">🎊</button>
+              <button class="sticker-btn" data-sticker="🌟">🌟</button>
+              <button class="sticker-btn" data-sticker="💝">💝</button>
+              <button class="sticker-btn" data-sticker="🎯">🎯</button>
+              <button class="sticker-btn" data-sticker="🔥">🔥</button>
+              <button class="sticker-btn" data-sticker="👑">👑</button>
+              <button class="sticker-btn" data-sticker="💎">💎</button>
+              <button class="sticker-btn" data-sticker="🌙">🌙</button>
+              <button class="sticker-btn" data-sticker="☀️">☀️</button>
+              <button class="sticker-btn" data-sticker="🎸">🎸</button>
+            </div>
+            
+            <!-- 스티커 크기 조절 버튼 -->
+            <div style="display:flex; gap:8px; justify-content:center; margin-top:8px; width:100%;">
+              <button style="padding:10px 14px; background:rgba(232,85,58,0.1); border:1px solid rgba(232,85,58,0.3); border-radius:6px; cursor:pointer; font-weight:600; color:rgba(232,85,58,0.8); font-size:1rem;" onclick="stickerSize=Math.max(10,stickerSize-5);updateStickerSizeDisplay();">➖</button>
+              <span style="padding:10px 16px; font-size:0.9rem; color:rgba(27,43,75,0.6); min-width:50px; text-align:center;"><strong id="stickerSizeDisplay">24px</strong></span>
+              <button style="padding:10px 14px; background:rgba(232,85,58,0.1); border:1px solid rgba(232,85,58,0.3); border-radius:6px; cursor:pointer; font-weight:600; color:rgba(232,85,58,0.8); font-size:1rem;" onclick="stickerSize=Math.min(120,stickerSize+5);updateStickerSizeDisplay();">➕</button>
+            </div>
+            
+            <!-- 스티커 사용법 -->
+            <div style="background:rgba(232,85,58,0.08); border:1px solid rgba(232,85,58,0.2); border-radius:8px; padding:10px; margin-top:8px; width:100%; text-align:left; font-size:0.75rem;">
+              <div style="font-weight:600; color:rgba(27,43,75,0.7); margin-bottom:6px;">📌 스티커 사용법</div>
+              <div style="color:rgba(27,43,75,0.6); line-height:1.4;">
+                <div>① 스티커 선택 (주황색 테두리)</div>
+                <div>② ➕/➖ 버튼으로 크기 조절</div>
+                <div>③ 사진 위에 클릭/탭 해서 붙이기</div>
+                <div style="color:rgba(232,85,58,0.8); margin-top:4px; font-size:0.7rem;">
+                  📱 드래그: 이동 | 롱터치(2초): 삭제<br/>💻 PC: 우클릭도 삭제 가능
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 텍스트 -->
+          <div style="display:flex; flex-direction:column; gap:6px; align-items:center; width:100%; max-width:320px;">
+            <span style="font-size:0.75rem; color:rgba(27,43,75,0.5); font-weight:600;">글씨 쓰기</span>
+            <div class="text-input-group">
+              <input id="textInput" type="text" placeholder="입력할 글씨...">
+              <input id="textSizeInput" type="number" value="24" min="10" max="100" title="크기">
+            </div>
+            <div class="text-input-group" style="max-width:100%;">
+              <select id="textFontSelect" style="flex:1; padding:8px; border:1px solid rgba(27,43,75,0.15); border-radius:8px; font-family:'Noto Sans KR',sans-serif; font-size:0.9rem;">
+                <option value="Noto Sans KR">산스체</option>
+                <option value="Gowun Batang">고운바탕</option>
+                <option value="Black Han Sans">검은산스</option>
+              </select>
+            </div>
+            <div class="edit-button-group">
+              <button class="btn-done" id="btnAddText">텍스트 추가</button>
+              <button class="btn-cancel" id="btnCancelEdit">취소</button>
+            </div>
+            
+            <!-- 글씨 사용법 -->
+            <div style="background:rgba(42,157,143,0.08); border:1px solid rgba(42,157,143,0.2); border-radius:8px; padding:10px; margin-top:8px; width:100%; text-align:left; font-size:0.75rem;">
+              <div style="font-weight:600; color:rgba(27,43,75,0.7); margin-bottom:6px;">✏️ 글씨 사용법</div>
+              <div style="color:rgba(27,43,75,0.6); line-height:1.4;">
+                <div>① 글씨 입력</div>
+                <div>② 폰트 선택</div>
+                <div>③ 크기 입력 (기본:24)</div>
+                <div>④ "텍스트 추가" 클릭</div>
+                <div style="color:rgba(42,157,143,0.8); margin-top:4px; font-size:0.7rem;">
+                  📱 드래그: 이동 | 롱터치(2초): 삭제<br/>💻 PC: 우클릭도 삭제 가능
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 결과 버튼 -->
+      <div class="btn-row">
+        <button class="btn btn-teal" id="btnEdit" title="스티커, 글씨 추가">✏️ 꾸미기</button>
+        <button class="btn btn-gold" id="btnQr" onclick="openQrModal()">📱 QR코드</button>
+        <button class="btn btn-primary" onclick="openSaveModal()">💾 저장</button>
+        <button class="btn btn-primary" onclick="resetAll()">🔄 다시 촬영</button>
+      </div>
+    </div>
+
+  </div><!-- /main-area -->
+</div><!-- /app-shell -->
+
+<!-- QR 모달 -->
+<div class="modal-overlay" id="qrModal">
+  <div class="qr-box">
+    <div class="qr-title">📱 QR코드로 받기</div>
+    <div class="qr-desc">QR코드를 스캔하면<br>사진을 바로 저장할 수 있어요!</div>
+    <div id="qrStatus" style="font-size:0.9rem;color:#a29bfe;min-height:1.4em;text-align:center;"></div>
+    <canvas id="qrCanvas" width="240" height="240"></canvas>
+    <div class="qr-hint">📷 카메라 앱으로 QR을 스캔하세요<br>꾹 눌러서 저장하세요</div>
+    <button class="btn btn-primary" style="width:100%" onclick="closeQrModal()">닫기</button>
+  </div>
+</div>
+
+<!-- 저장 모달 -->
+<div class="modal-overlay" id="saveModal">
+  <div class="modal-box">
+    <div class="modal-title">💾 사진 저장</div>
+    <div class="modal-desc">저장할 파일 이름을 입력하세요.<br><span style="font-size:0.78rem;opacity:0.4;">(.jpg 는 자동으로 붙습니다)</span></div>
+    <input type="text" class="text-input" id="filenameInput" placeholder="예: 홍길동_모두이야기캠프" maxlength="50">
+    <div class="modal-btn-row">
+      <button class="btn btn-primary" onclick="closeSaveModal()">취소</button>
+      <button class="btn btn-gold"    onclick="downloadCollage()">저장 💾</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="captureCanvas" style="display:none"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// ════════════════════════════════
+const CONFIG = {
+  year:     '2026',
+  title:    '모두 이야기 캠프',
+  colTitle: '모두 이야기 캠프',
+  date:     '2026. 10. 31.',
+  venue:    '모두예술극장',
+
+  netlify:  'https://admirable-chimera-0470bb.netlify.app',
+  imgbbKey: 'bfa1b9561986bee707edf2c5077c427e',
+  shots:    4,
+  interval: 5,
+};
+
+let selectedShotCount = CONFIG.shots;
+let selectedLayout    = 'vertical';
+let selectedBgColor   = 'orange';
+let selectedBgPattern = 'none';
+
+const BG_COLORS = {
+  orange:   { stops: ['#F4A04A','#F2855A','#E8693A'] },
+  navy:     { stops: ['#1B2B4B','#2d4a7a','#1B2B4B'] },
+  teal:     { stops: ['#2A9D8F','#48c9b6','#2A9D8F'] },
+  rose:     { stops: ['#e91e8c','#f4659c','#e91e8c'] },
+  lavender: { stops: ['#7b68ee','#a29bfe','#7b68ee'] },
+  forest:   { stops: ['#2d6a4f','#52b788','#2d6a4f'] },
+};
+
+let stream = null;
+let capturedImages = [];
+let shotCount = 0;
+let isShooting = false;
+let TOTAL_SHOTS = selectedShotCount;
+
+const videoEl       = document.getElementById('videoEl');
+const captureCanvas = document.getElementById('captureCanvas');
+const collageCanvas = document.getElementById('collageCanvas');
+const placeholderEl = document.getElementById('placeholderEl');
+const countdownOverlay = document.getElementById('countdownOverlay');
+const countdownNum  = document.getElementById('countdownNum');
+const btnReady      = document.getElementById('btnReady');
+const btnShoot      = document.getElementById('btnShoot');
+const statusMsg     = document.getElementById('statusMsg');
+const flashEl       = document.getElementById('flashEl');
+
+
+buildDots(selectedShotCount);
+
+// ── 옵션 함수 ──
+function setShotCount(n) {
+  selectedShotCount = n; TOTAL_SHOTS = n;
+  document.querySelectorAll('#shotCountOpts .chip').forEach(b => b.classList.toggle('selected', parseInt(b.dataset.shots) === n));
+  updateLayoutOptions(n);
+  buildDots(n);
+}
+function updateLayoutOptions(n) {
+  const gridBtn = document.querySelector(`[data-layout="grid"]`);
+  if (n !== 4) { gridBtn.classList.add('disabled'); if (selectedLayout === 'grid') setLayout('vertical'); }
+  else gridBtn.classList.remove('disabled');
+}
+function setLayout(layout) {
+  selectedLayout = layout;
+  document.querySelectorAll('#layoutOpts .layout-chip').forEach(b => b.classList.toggle('selected', b.dataset.layout === layout));
+}
+function setBgColor(color) {
+  selectedBgColor = color;
+  document.querySelectorAll('#bgColorOpts .swatch').forEach(b => b.classList.toggle('selected', b.dataset.color === color));
+}
+function setBgPattern(pattern) {
+  selectedBgPattern = pattern;
+  document.querySelectorAll('#bgPatternOpts .pattern-chip').forEach(b => b.classList.toggle('selected', b.dataset.pattern === pattern));
+}
+function buildDots(n) {
+  const c = document.getElementById('shotIndicator'); c.innerHTML = '';
+  for (let i = 0; i < n; i++) { const d = document.createElement('div'); d.className='shot-dot'; d.id=`dot${i}`; c.appendChild(d); }
+}
+
+// ── 전체화면 ──
+function toggleFullscreen() {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen(); else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    document.getElementById('fsIcon').textContent='✕'; document.getElementById('fsText').textContent='전체화면 종료';
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    document.getElementById('fsIcon').textContent='⛶'; document.getElementById('fsText').textContent='전체화면';
+  }
+}
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) { document.getElementById('fsIcon').textContent='⛶'; document.getElementById('fsText').textContent='전체화면'; } });
+document.addEventListener('webkitfullscreenchange', () => { if (!document.webkitFullscreenElement) { document.getElementById('fsIcon').textContent='⛶'; document.getElementById('fsText').textContent='전체화면'; } });
+
+// ── 카메라 ──
+async function startCamera() {
+  // 이미 스트림이 있으면 다시 요청하지 않음
+  if (stream && stream.active) {
+    videoEl.style.display='block'; placeholderEl.style.display='none';
+    btnReady.disabled=true; btnShoot.disabled=false;
+    setStatus('카메라 준비 완료! 촬영 시작 버튼을 눌러주세요.', false);
+    return;
+  }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user', width:1280, height:960 }, audio:false });
+    videoEl.srcObject = stream; videoEl.style.display='block'; placeholderEl.style.display='none';
+    btnReady.disabled=true; btnShoot.disabled=false;
+    setStatus('카메라 준비 완료! 촬영 시작 버튼을 눌러주세요.', false);
+  } catch(e) { setStatus('카메라 접근에 실패했습니다. 브라우저 권한을 확인해주세요.', true); }
+}
+
+async function startShooting() {
+  if (isShooting) return;
+  isShooting=true; capturedImages=[]; shotCount=0; btnShoot.disabled=true;
+  document.getElementById('btnResult').style.display='none'; resetDots();
+  for (let i=0; i<TOTAL_SHOTS; i++) {
+    markDot(i,'active'); setStatus(`${i+1}번째 사진 촬영 중...`, false);
+    await waitCountdown(CONFIG.interval); takePhoto(i); markDot(i,'done'); await sleep(400);
+  }
+  isShooting=false; setStatus(`${TOTAL_SHOTS}컷 촬영 완료! 콜라주를 만들고 있어요...`, false);
+  await sleep(300); buildCollage();
+}
+
+function waitCountdown(sec) {
+  return new Promise(resolve => {
+    let remaining = sec;
+    countdownOverlay.classList.add('active');
+    const signEl = document.getElementById('countdownSign');
+    const signMap = { 5:'signs/수어숫자-05.png',4:'signs/수어숫자-04.png',3:'signs/수어숫자-03.png',2:'signs/수어숫자-02.png',1:'signs/수어숫자-01.png' };
+    function tick() {
+      countdownNum.textContent=remaining; countdownNum.style.animation='none'; void countdownNum.offsetWidth; countdownNum.style.animation='countPop 1s ease-out forwards';
+      if (signMap[remaining]) { signEl.src=signMap[remaining]; signEl.style.animation='none'; void signEl.offsetWidth; signEl.style.animation='countPop 1s ease-out forwards'; signEl.style.display='block'; }
+      else { signEl.style.display='none'; }
+      remaining--;
+      if (remaining>=0) setTimeout(tick,1000); else { countdownOverlay.classList.remove('active'); resolve(); }
+    }
+    tick();
+  });
+}
+
+function takePhoto(index) {
+  const vw=videoEl.videoWidth||640, vh=videoEl.videoHeight||480;
+  captureCanvas.width=vw; captureCanvas.height=vh;
+  const ctx=captureCanvas.getContext('2d');
+  // 거울모드 제거 - 반거울모드(정상)로 촬영
+  ctx.drawImage(videoEl,0,0,vw,vh);
+  flashEffect(); capturedImages.push(captureCanvas.toDataURL('image/jpeg',0.92));
+}
+function flashEffect() { flashEl.classList.add('on'); setTimeout(()=>flashEl.classList.remove('on'),120); }
+
+function drawBackground(ctx, totalW, totalH) {
+  const stops = BG_COLORS[selectedBgColor].stops;
+  const grad = ctx.createLinearGradient(0,0,0,totalH);
+  grad.addColorStop(0,stops[0]); grad.addColorStop(0.5,stops[1]); grad.addColorStop(1,stops[2]);
+  ctx.fillStyle=grad; ctx.fillRect(0,0,totalW,totalH);
+  if (selectedBgPattern==='dots') {
+    ctx.fillStyle='rgba(255,255,255,0.12)';
+    for (let x=9; x<totalW; x+=18) for (let y=9; y<totalH; y+=18) { ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fill(); }
+  } else if (selectedBgPattern==='lines') {
+    ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=1;
+    for (let i=-totalH; i<totalW+totalH; i+=16) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i+totalH,totalH); ctx.stroke(); }
+  } else if (selectedBgPattern==='grid') {
+    ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.lineWidth=1;
+    for (let x=0; x<totalW; x+=20) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,totalH); ctx.stroke(); }
+    for (let y=0; y<totalH; y+=20) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(totalW,y); ctx.stroke(); }
+  } else if (selectedBgPattern==='stars') {
+    ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.font='14px sans-serif'; ctx.textAlign='center';
+    for (let x=15; x<totalW; x+=30) for (let y=15; y<totalH; y+=30) ctx.fillText('✦',x+(y%2===0?0:15),y);
+  } else if (selectedBgPattern==='hearts') {
+    ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+    for (let x=14; x<totalW; x+=28) for (let y=14; y<totalH; y+=28) ctx.fillText('♥',x+(y%2===0?0:14),y);
+  }
+}
+
+function buildCollage() {
+  const PADDING=18, HEADER_H=44, FOOTER_H=36, GAP=10, n=capturedImages.length;
+  let COLS, ROWS, cellW, cellH;
+  if (selectedLayout==='vertical')         { COLS=1; ROWS=n; cellW=480; cellH=270; }
+  else if (selectedLayout==='horizontal')  { COLS=n; ROWS=1; cellW=360; cellH=480; }
+  else if (selectedLayout==='grid'&&n===4) { COLS=2; ROWS=2; cellW=360; cellH=270; }
+  else                                     { COLS=1; ROWS=n; cellW=480; cellH=270; }
+  const totalW=COLS*cellW+(COLS-1)*GAP+PADDING*2;
+  const totalH=ROWS*cellH+(ROWS-1)*GAP+PADDING*2+HEADER_H+FOOTER_H;
+  collageCanvas.width=totalW; collageCanvas.height=totalH;
+  const ctx=collageCanvas.getContext('2d');
+  drawBackground(ctx,totalW,totalH);
+  ctx.fillStyle='#fff'; ctx.font='bold 28px "Noto Sans KR",sans-serif'; ctx.textAlign='center';
+  ctx.fillText(CONFIG.colTitle,totalW/2,PADDING+22);
+  ctx.font='18px "Noto Sans KR",sans-serif'; ctx.fillStyle='rgba(255,255,255,0.9)';
+  ctx.fillText(CONFIG.date+' '+CONFIG.venue,totalW/2,totalH-PADDING-4);
+  Promise.all(capturedImages.map(src=>new Promise(res=>{ const img=new Image(); img.onload=()=>res(img); img.src=src; }))).then(imgs=>{
+    if (selectedLayout==='free'&&n===4) {
+      drawCell(ctx,imgs[0],PADDING,PADDING+HEADER_H,cellW,cellH*2+GAP);
+      for (let i=1;i<=3;i++) drawCell(ctx,imgs[i],PADDING+cellW+GAP,PADDING+HEADER_H+(i-1)*(cellH+GAP),cellW,cellH);
+    } else {
+      imgs.forEach((img,i)=>{
+        const col=selectedLayout==='horizontal'?i:selectedLayout==='grid'?i%2:0;
+        const row=selectedLayout==='horizontal'?0:selectedLayout==='grid'?Math.floor(i/2):i;
+        drawCell(ctx,img,PADDING+col*(cellW+GAP),PADDING+HEADER_H+row*(cellH+GAP),cellW,cellH);
+      });
+    }
+    setStatus(`${n}컷 완료! 결과 보기를 눌러주세요 🎉`, false);
+    document.getElementById('btnResult').style.display='inline-flex';
+    uploadToImgBB();
+  });
+}
+
+function drawCell(ctx,img,x,y,cellW,cellH) {
+  ctx.save(); roundRect(ctx,x,y,cellW,cellH,8); ctx.clip();
+  const scale=Math.max(cellW/img.width,cellH/img.height);
+  ctx.drawImage(img,(img.width-cellW/scale)/2,(img.height-cellH/scale)/2,cellW/scale,cellH/scale,x,y,cellW,cellH);
+  ctx.restore();
+  ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=2; roundRect(ctx,x,y,cellW,cellH,8); ctx.stroke();
+}
+function roundRect(ctx,x,y,w,h,r) {
+  ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+
+const IMGBB_API_KEY=CONFIG.imgbbKey;
+let uploadedImageUrl=null;
+async function uploadToImgBB() {
+  try {
+    // collageCanvas와 editCanvas를 합성한 최종 이미지 생성
+    const finalCanvas=document.createElement('canvas');
+    finalCanvas.width=collageCanvas.width;
+    finalCanvas.height=collageCanvas.height;
+    const fctx=finalCanvas.getContext('2d');
+    fctx.drawImage(collageCanvas,0,0);
+    
+    const editCanvas=document.getElementById('editCanvas');
+    if(editCanvas.style.display!=='none'){
+      fctx.drawImage(editCanvas,0,0);
+    }
+    
+    const fd=new FormData(); 
+    fd.append('key',IMGBB_API_KEY); 
+    fd.append('image',finalCanvas.toDataURL('image/jpeg',0.85).split(',')[1]); 
+    fd.append('name','모두이야기캠프_'+Date.now());
+    
+    const data=await(await fetch('https://api.imgbb.com/1/upload',{method:'POST',body:fd})).json();
+    if (data.success) { uploadedImageUrl=CONFIG.netlify+'/viewer.html?img='+encodeURIComponent(data.data.url); setResultStatus('업로드 완료! QR코드로 사진을 받아가세요 📱',false); document.getElementById('btnQr').style.animation='pulse 0.6s ease-in-out 3'; }
+    else setResultStatus('업로드 실패. 사진 저장을 이용해주세요.',true);
+  } catch(e) { setResultStatus('업로드 실패. 사진 저장을 이용해주세요.',true); }
+}
+
+function openQrModal() {
+  if (!uploadedImageUrl) { alert('사진 업로드 중입니다. 잠시 후 다시 눌러주세요!'); return; }
+  document.getElementById('qrModal').classList.add('open'); document.getElementById('qrStatus').textContent='QR코드 생성 중...'; document.getElementById('qrCanvas').style.display='none'; generateQR();
+}
+function closeQrModal() { document.getElementById('qrModal').classList.remove('open'); }
+function generateQR() {
+  const qrCanvas=document.getElementById('qrCanvas'); const tmpDiv=document.createElement('div'); tmpDiv.style.cssText='position:absolute;left:-9999px;top:-9999px;'; document.body.appendChild(tmpDiv);
+  try {
+    new QRCode(tmpDiv,{text:uploadedImageUrl,width:240,height:240,colorDark:'#1B2B4B',colorLight:'#FFFDF9',correctLevel:QRCode.CorrectLevel.L});
+    setTimeout(()=>{
+      const g=tmpDiv.querySelector('canvas')||tmpDiv.querySelector('img'); const ctx=qrCanvas.getContext('2d'); ctx.clearRect(0,0,240,240);
+      if (g&&g.tagName==='CANVAS'){ctx.drawImage(g,0,0,240,240);showQR();}
+      else if(g&&g.tagName==='IMG'){const img=new Image();img.onload=()=>{ctx.drawImage(img,0,0,240,240);showQR();};img.src=g.src;}
+      else showQrError('QR 생성에 실패했어요.'); document.body.removeChild(tmpDiv);
+    },300);
+  } catch(e){showQrError('오류: '+e.message);document.body.removeChild(tmpDiv);}
+}
+function showQR(){document.getElementById('qrStatus').textContent='';document.getElementById('qrCanvas').style.display='block';}
+function showQrError(msg){document.getElementById('qrStatus').textContent='⚠️ '+msg;}
+
+function openSaveModal(){document.getElementById('filenameInput').value='';document.getElementById('saveModal').classList.add('open');setTimeout(()=>document.getElementById('filenameInput').focus(),100);}
+function closeSaveModal(){document.getElementById('saveModal').classList.remove('open');}
+function downloadCollage(){
+  const input=document.getElementById('filenameInput').value.trim();
+  const a=document.createElement('a'); a.href=collageCanvas.toDataURL('image/jpeg',0.95); a.download=(input?input:'모두이야기캠프_포토부스')+'.jpg'; a.click(); closeSaveModal();
+}
+
+function showResult(){
+  document.getElementById('cameraPanel').style.display='none';
+  document.getElementById('optionsPanel').style.display='none';
+  document.getElementById('resultScreen').style.display='flex';
+  // 스트림을 종료하지 않음 - 다음 촬영을 위해 카메라 권한 유지
+}
+function resetAll(){
+  document.getElementById('resultScreen').style.display='none';
+  document.getElementById('cameraPanel').style.display='flex';
+  document.getElementById('optionsPanel').style.display='flex';
+  videoEl.style.display='none'; placeholderEl.style.display='flex';
+  btnReady.disabled=false; btnShoot.disabled=true;
+  document.getElementById('btnResult').style.display='none';
+  capturedImages=[]; shotCount=0; uploadedImageUrl=null; resetDots();
+  textItems=[]; stickerItems=[]; // 편집 내용 초기화
+  setStatus('촬영 준비 버튼을 눌러 카메라를 시작하세요.',false); setResultStatus('',false);
+  setShotCount(4); setLayout('vertical'); setBgColor('orange'); setBgPattern('none');
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function setStatus(msg,isError){statusMsg.textContent=msg;statusMsg.style.color=isError?'var(--coral)':'rgba(27,43,75,0.5)';}
+function setResultStatus(msg,isError){const el=document.getElementById('resultStatusMsg');el.textContent=msg;el.style.color=isError?'var(--coral)':'rgba(27,43,75,0.5)';}
+function resetDots(){for(let i=0;i<TOTAL_SHOTS;i++){const d=document.getElementById(`dot${i}`);if(d)d.className='shot-dot';}}
+function markDot(i,state){const d=document.getElementById(`dot${i}`);if(d)d.className=`shot-dot ${state}`;}
+
+document.getElementById('saveModal').addEventListener('click',function(e){if(e.target===this)closeSaveModal();});
+document.getElementById('qrModal').addEventListener('click',function(e){if(e.target===this)closeQrModal();});
+
+// ── 편집 기능 ──
+let editMode=false, activeSticker=null;
+let textItems=[]; // 추가된 텍스트들 저장
+let stickerItems=[]; // 추가된 스티커들 저장
+let draggingText=null;
+let stickerSize=24; // 스티커 기본 크기 (48 -> 24로 반 감소)
+let hoveredItemId=null; // 호버된 아이템
+
+// 편집 시작/완료 토글
+document.getElementById('btnEdit').addEventListener('click',()=>{
+  const btnEdit=document.getElementById('btnEdit');
+  const btnQr=document.getElementById('btnQr');
+  if(editMode){
+    // 편집 완료
+    finishEdit();
+    btnEdit.textContent='✏️ 꾸미기';
+    btnQr.style.display='inline-flex';  // QR코드 버튼 표시
+  }else{
+    // 편집 시작
+    startEdit();
+    btnEdit.textContent='✏️ 꾸미기 완료';
+    btnQr.style.display='none';  // QR코드 버튼 숨김
+  }
+});
+
+function updateStickerSizeDisplay(){
+  document.getElementById('stickerSizeDisplay').textContent=stickerSize+'px';
+}
+
+function startEdit(){
+  editMode=true;
+  // 이전 편집 세션의 아이템 초기화
+  textItems=[];
+  stickerItems=[];
+  const editCanvas=document.getElementById('editCanvas');
+  const collageCanvas=document.getElementById('collageCanvas');
+  editCanvas.width=collageCanvas.width;
+  editCanvas.height=collageCanvas.height;
+  editCanvas.style.display='block';
+  document.getElementById('editToolbar').classList.add('active');
+  document.getElementById('textInput').focus();
+  stickerSize=24;
+  updateStickerSizeDisplay();
+  redrawEditCanvas();
+}
+
+function finishEdit(){
+  editMode=false;
+  document.getElementById('editToolbar').classList.remove('active');
+  document.querySelectorAll('.sticker-btn').forEach(b=>b.classList.remove('active'));
+  activeSticker=null;
+  draggingText=null;
+  
+  // 편집된 이미지를 다시 업로드
+  setResultStatus('편집된 사진 업로드 중...', false);
+  uploadToImgBB();
+}
+
+// 스티커 선택 (토글: 다시 클릭하면 해제)
+document.querySelectorAll('.sticker-btn').forEach(btn=>{
+  btn.addEventListener('click',(e)=>{
+    // 이미 선택된 스티커를 다시 클릭했으면 해제
+    if(btn.classList.contains('active')){
+      btn.classList.remove('active');
+      activeSticker=null;
+    }else{
+      // 다른 스티커를 클릭했으면 선택
+      document.querySelectorAll('.sticker-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      activeSticker=btn.dataset.sticker;
+    }
+  });
+});
+
+// 스티커 붙이기 (배열에 저장)
+document.getElementById('editCanvas').addEventListener('pointerup',(e)=>{
+  if(!editMode||!activeSticker||draggingText!==null)return;
+  
+  // 짧은 클릭/탭만 감지 (드래그 아님)
+  const dist=Math.sqrt((e.clientX-dragStartX)**2+(e.clientY-dragStartY)**2);
+  if(dist>10)return; // 10px 이상 드래그된 경우는 무시
+  
+  const rect=e.target.getBoundingClientRect();
+  const x=(e.clientX-rect.left)*(e.target.width/rect.width);
+  const y=(e.clientY-rect.top)*(e.target.height/rect.height);
+  const id='sticker_'+Date.now();
+  stickerItems.push({id,sticker:activeSticker,size:stickerSize,x,y});
+  redrawEditCanvas();
+  
+  // 스티커 붙인 후 선택 해제
+  activeSticker=null;
+  document.querySelectorAll('.sticker-btn').forEach(b=>b.classList.remove('active'));
+}, true);
+
+// 스티커 크기 조절 (마우스 휠)
+document.getElementById('editCanvas').addEventListener('wheel',(e)=>{
+  if(!editMode||!activeSticker)return;
+  e.preventDefault();
+  stickerSize=Math.max(10,Math.min(120,stickerSize+(e.deltaY>0?-2:2)));
+});
+
+// 텍스트 추가
+document.getElementById('btnAddText').addEventListener('click',()=>{
+  const text=document.getElementById('textInput').value.trim();
+  if(!text)return;
+  const size=parseInt(document.getElementById('textSizeInput').value)||24;
+  const font=document.getElementById('textFontSelect').value;
+  const editCanvas=document.getElementById('editCanvas');
+  const centerX=editCanvas.width/2;
+  const centerY=editCanvas.height-100;
+  const id='text_'+Date.now();
+  textItems.push({id,text,size,font,x:centerX,y:centerY});
+  redrawEditCanvas();
+  document.getElementById('textInput').value='';
+  document.getElementById('textInput').focus();
+});
+
+// editCanvas 다시 그리기
+function redrawEditCanvas(){
+  const editCanvas=document.getElementById('editCanvas');
+  const ctx=editCanvas.getContext('2d');
+  ctx.clearRect(0,0,editCanvas.width,editCanvas.height);
+  
+  // 스티커 그리기
+  stickerItems.forEach(item=>{
+    ctx.font=`${item.size}px Arial`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(item.sticker,item.x,item.y);
+  });
+  
+  // 텍스트 그리기
+  textItems.forEach(item=>{
+    const fontName=item.font||'Noto Sans KR';
+    ctx.font=`bold ${item.size}px "${fontName}",sans-serif`;
+    ctx.fillStyle='#1B2B4B';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.shadowColor='rgba(255,255,255,0.8)';
+    ctx.shadowBlur=3;
+    ctx.fillText(item.text,item.x,item.y);
+  });
+}
+
+// 터치 관련 변수
+let dragStartX=0, dragStartY=0;
+let longPressTimer=null;
+let lastTouchX=0, lastTouchY=0;
+
+// 포인터 이벤트 (마우스 + 터치 모두 지원)
+document.getElementById('editCanvas').addEventListener('pointerdown',(e)=>{
+  if(!editMode)return;
+  e.preventDefault();
+  
+  const rect=e.target.getBoundingClientRect();
+  const x=(e.clientX-rect.left)*(e.target.width/rect.width);
+  const y=(e.clientY-rect.top)*(e.target.height/rect.height);
+  dragStartX=e.clientX;
+  dragStartY=e.clientY;
+  lastTouchX=x;
+  lastTouchY=y;
+  
+  // 클릭한 텍스트 찾기 (위에 있으므로 먼저 확인)
+  for(let i=textItems.length-1;i>=0;i--){
+    const item=textItems[i];
+    const dist=Math.sqrt((x-item.x)**2+(y-item.y)**2);
+    if(dist<35){
+      draggingText=i;
+      e.target.style.cursor='grabbing';
+      
+      // 모바일에서 롱터치 감지 (500ms)
+      longPressTimer=setTimeout(()=>{
+        textItems.splice(i,1);
+        redrawEditCanvas();
+      }, 500);
+      return;
+    }
+  }
+  
+  // 클릭한 스티커 찾기
+  for(let i=stickerItems.length-1;i>=0;i--){
+    const item=stickerItems[i];
+    const dist=Math.sqrt((x-item.x)**2+(y-item.y)**2);
+    if(dist<35){
+      draggingText='sticker_'+i;
+      e.target.style.cursor='grabbing';
+      
+      // 모바일에서 롱터치 감지 (500ms)
+      longPressTimer=setTimeout(()=>{
+        stickerItems.splice(i,1);
+        redrawEditCanvas();
+      }, 500);
+      return;
+    }
+  }
+});
+
+document.getElementById('editCanvas').addEventListener('pointermove',(e)=>{
+  if(!editMode)return;
+  
+  // 롱터치 중에는 드래그하지 않음
+  if(longPressTimer){
+    clearTimeout(longPressTimer);
+    longPressTimer=null;
+  }
+  
+  const editCanvas=document.getElementById('editCanvas');
+  const rect=editCanvas.getBoundingClientRect();
+  const x=(e.clientX-rect.left)*(editCanvas.width/rect.width);
+  const y=(e.clientY-rect.top)*(editCanvas.height/rect.height);
+  
+  if(draggingText!==null){
+    // 위치 이동
+    if(typeof draggingText==='string'&&draggingText.startsWith('sticker_')){
+      const idx=parseInt(draggingText.split('_')[1]);
+      stickerItems[idx].x=x;
+      stickerItems[idx].y=y;
+    }else{
+      textItems[draggingText].x=x;
+      textItems[draggingText].y=y;
+    }
+    redrawEditCanvas();
+  }else{
+    // 텍스트/스티커 위에 호버 시 커서 변경
+    let isOnItem=false;
+    hoveredItemId=null;
+    for(let item of textItems){
+      const dist=Math.sqrt((x-item.x)**2+(y-item.y)**2);
+      if(dist<35){
+        isOnItem=true;
+        hoveredItemId=item.id;
+        break;
+      }
+    }
+    if(!isOnItem){
+      for(let item of stickerItems){
+        const dist=Math.sqrt((x-item.x)**2+(y-item.y)**2);
+        if(dist<35){
+          isOnItem=true;
+          hoveredItemId=item.id;
+          break;
+        }
+      }
+    }
+    editCanvas.style.cursor=isOnItem?'grab':'crosshair';
+  }
+});
+
+document.getElementById('editCanvas').addEventListener('pointerup',(e)=>{
+  // 롱터치 완료
+  if(longPressTimer){
+    clearTimeout(longPressTimer);
+    longPressTimer=null;
+  }
+  draggingText=null;
+  document.getElementById('editCanvas').style.cursor='crosshair';
+});
+
+// 오른쪽 클릭으로 삭제
+document.getElementById('editCanvas').addEventListener('contextmenu',(e)=>{
+  if(!editMode)return;
+  e.preventDefault();
+  const rect=e.target.getBoundingClientRect();
+  const x=(e.clientX-rect.left)*(e.target.width/rect.width);
+  const y=(e.clientY-rect.top)*(e.target.height/rect.height);
+  
+  // 클릭한 텍스트 찾아 삭제 (위에 있으므로 먼저 확인)
+  for(let i=textItems.length-1;i>=0;i--){
+    const item=textItems[i];
+    const dist=Math.sqrt((x-item.x)**2+(y-item.y)**2);
+    if(dist<35){
+      textItems.splice(i,1);
+      redrawEditCanvas();
+      return;
+    }
+  }
+  
+  // 클릭한 스티커 찾아 삭제
+  for(let i=stickerItems.length-1;i>=0;i--){
+    const item=stickerItems[i];
+    const dist=Math.sqrt((x-item.x)**2+(y-item.y)**2);
+    if(dist<35){
+      stickerItems.splice(i,1);
+      redrawEditCanvas();
+      return;
+    }
+  }
+});
+
+// 편집 완료
+// 편집 취소
+document.getElementById('btnCancelEdit').addEventListener('click',()=>{
+  editMode=false;
+  const editCanvas=document.getElementById('editCanvas');
+  editCanvas.style.display='none';
+  editCanvas.getContext('2d').clearRect(0,0,editCanvas.width,editCanvas.height);
+  document.getElementById('editToolbar').classList.remove('active');
+  document.querySelectorAll('.sticker-btn').forEach(b=>b.classList.remove('active'));
+  activeSticker=null;
+  textItems=[];
+  stickerItems=[];
+  draggingText=null;
+});
+
+// 저장할 때 편집 내용 포함
+const originalDownloadCollage=downloadCollage;
+window.downloadCollage=function(){
+  const input=document.getElementById('filenameInput').value.trim();
+  const collageCanvas=document.getElementById('collageCanvas');
+  const editCanvas=document.getElementById('editCanvas');
+  const finalCanvas=document.createElement('canvas');
+  finalCanvas.width=collageCanvas.width;
+  finalCanvas.height=collageCanvas.height;
+  const fctx=finalCanvas.getContext('2d');
+  fctx.drawImage(collageCanvas,0,0);
+  if(editCanvas.style.display!=='none'){
+    fctx.drawImage(editCanvas,0,0);
+  }
+  const a=document.createElement('a');
+  a.href=finalCanvas.toDataURL('image/jpeg',0.95);
+  a.download=(input?input:'모두이야기캠프_포토부스')+'.jpg';
+  a.click();
+  closeSaveModal();
+};
+</script>
+</body>
+</html>
